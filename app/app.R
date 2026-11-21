@@ -4,6 +4,7 @@ library(ggplot2)
 
 source("exploration.R", local = TRUE, encoding = "UTF-8")
 source("preparation.R", local = TRUE, encoding = "UTF-8")
+source("imputation_comparison.R", local = TRUE, encoding = "UTF-8")
 
 missing_tokens <- c("", "NA", "N/A", "?")
 numeric_methods <- c("Médiane" = "median", "Moyenne" = "mean",
@@ -18,6 +19,14 @@ normalize_missing <- function(column) {
   column
 }
 
+most_frequent <- function(column) {
+  observed <- column[!is.na(column)]
+  if (!length(observed)) return(column[NA_integer_])
+  categories <- unique(observed)
+  counts <- tabulate(match(observed, categories))
+  categories[which.max(counts)]
+}
+
 impute_column <- function(column, numeric_method, categorical_method) {
   observed <- column[!is.na(column)]
   if (!length(observed) || !anyNA(column)) return(column)
@@ -27,9 +36,7 @@ impute_column <- function(column, numeric_method, categorical_method) {
     if (numeric_method == "mean") column[is.na(column)] <- mean(observed)
   } else if ((is.character(column) || is.logical(column)) &&
              categorical_method == "mode") {
-    categories <- unique(observed)
-    counts <- tabulate(match(observed, categories))
-    column[is.na(column)] <- categories[which.max(counts)]
+    column[is.na(column)] <- most_frequent(observed)
   }
   column
 }
@@ -164,17 +171,6 @@ ui <- navbarPage(
     )
   ),
   tabPanel(
-    "Exploration",
-    h1(class = "page-heading", "Explorer les données"),
-    p(class = "diagnostic-help",
-      "Une colonne montre la répartition des valeurs. Deux colonnes permettent de comparer leurs valeurs ligne par ligne. Les graphiques utilisent les données avant imputation."),
-    conditionalPanel(
-      "input.source === 'upload' && !output.dataset_available",
-      p(class = "diagnostic-help", "Charge un fichier lisible dans Import et diagnostic pour commencer.")
-    ),
-    conditionalPanel("output.dataset_available", exploration_ui("eda"))
-  ),
-  tabPanel(
     "Nettoyage et imputation",
     h1(class = "page-heading", "Remplir les cellules vides"),
     conditionalPanel(
@@ -225,6 +221,25 @@ ui <- navbarPage(
                 p(class = "diagnostic-help",
                   "Le tableau indique combien de valeurs manquaient au départ, combien ont été remplacées et combien restent."),
                 div(class = "table-scroll", tableOutput("imputation")))
+          ),
+          tabPanel(
+            "Comparer les méthodes",
+            div(
+              class = "diagnostic-view",
+              p(class = "diagnostic-help",
+                "On masque des valeurs connues, puis on compare les estimations aux vraies valeurs. Plus l’erreur est petite, mieux c’est."),
+              actionButton("compare_imputation", "Lancer la comparaison"),
+              tags$details(
+                class = "diagnostic-detail",
+                tags$summary("Protocole du test"),
+                p(class = "diagnostic-help",
+                  "Cinq tirages. Sur Mice, les mesures d’une souris restent ensemble et deux souris de chaque groupe servent au test. Pour un fichier importé, environ 20 % des lignes servent au test et jusqu’à 3 000 autres lignes servent de référence."),
+                p(class = "diagnostic-help",
+                  "Chaque tirage masque jusqu’à 500 valeurs isolées par type de variable. Les méthodes utilisent les mêmes valeurs masquées dans chaque scénario. L’erreur indique l’écart absolu moyen pour les nombres et le pourcentage de catégories mal estimées pour les catégories.")
+              ),
+              div(class = "diagnostic-view",
+                  div(class = "table-scroll", tableOutput("imputation_test_scores")))
+            )
           )
         ),
         div(class = "imputation-export",
@@ -234,6 +249,15 @@ ui <- navbarPage(
         width = 9
       )
     ))
+  ),
+  tabPanel(
+    "Exploration",
+    h1(class = "page-heading", "Explorer les données"),
+    conditionalPanel(
+      "input.source === 'upload' && !output.dataset_available",
+      p(class = "diagnostic-help", "Charge un fichier lisible dans Import et diagnostic pour commencer.")
+    ),
+    conditionalPanel("output.dataset_available", exploration_ui("eda"))
   ),
   tabPanel(
     "Préparation",
@@ -247,33 +271,31 @@ ui <- navbarPage(
   tabPanel(
     "Étude Mice",
     h1(class = "page-heading", "Mice Protein Expression"),
-    p(class = "diagnostic-help",
-      "Peut-on retrouver les groupes expérimentaux à partir des protéines mesurées dans le cortex des souris ?"),
     div(class = "study-overview",
-        uiOutput("mice_summary"),
-        p("Les huit groupes combinent le génotype, le protocole comportemental et le traitement."),
-        p(class = "diagnostic-help",
-          tags$strong("Comment lire c-CS-m ? "),
-          "c indique une souris témoin (t pour trisomique), CS signifie contexte puis choc (SC pour l’ordre inverse) et m indique la mémantine (s pour la solution saline)."),
-        p(a("Description du jeu de données (UCI)", href = "https://doi.org/10.24432/C50S3Z"))),
-    sidebarLayout(
-      sidebarPanel(
-        h2("Comparer les groupes"),
-        selectInput("study_protein", "Protéine à comparer", NULL),
-        p(class = "diagnostic-help", "Choisis une protéine pour comparer son niveau entre les huit groupes."),
-        width = 3
-      ),
-      mainPanel(
-        panel_card("Niveau de la protéine par groupe",
-                   p(class = "diagnostic-help",
-                     "Chaque point représente une souris. Sa valeur est la médiane de ses mesures disponibles pour cette protéine."),
-                   plotOutput("study_protein_plot", height = "340px")),
-        panel_card("Effectifs des groupes",
-                   p(class = "diagnostic-help", "Les effectifs sont comptés en souris. Toutes les mesures d’une souris doivent rester dans le même lot lors d’une future évaluation."),
-                   div(class = "table-scroll", tableOutput("mice_groups"))),
-        width = 9
+          uiOutput("mice_summary"),
+          p("Les huit groupes combinent le génotype, le protocole comportemental et le traitement."),
+          p(class = "diagnostic-help",
+            tags$strong("Comment lire c-CS-m ? "),
+            "c indique une souris témoin (t pour trisomique), CS signifie contexte puis choc (SC pour l’ordre inverse) et m indique la mémantine (s pour la solution saline)."),
+          p(a("Description du jeu de données (UCI)", href = "https://doi.org/10.24432/C50S3Z"))),
+      sidebarLayout(
+        sidebarPanel(
+          h2("Comparer les groupes"),
+          selectInput("study_protein", "Protéine à comparer", NULL),
+          p(class = "diagnostic-help", "Choisis une protéine pour comparer son niveau entre les huit groupes."),
+          width = 3
+        ),
+        mainPanel(
+          panel_card("Niveau de la protéine par groupe",
+                     p(class = "diagnostic-help",
+                       "Chaque point représente une souris. Sa valeur est la médiane de ses mesures disponibles pour cette protéine."),
+                     plotOutput("study_protein_plot", height = "340px")),
+          panel_card("Effectifs des groupes",
+                     p(class = "diagnostic-help", "Les effectifs sont comptés en souris. Toutes les mesures d’une souris doivent rester dans le même lot lors d’une future évaluation."),
+                     div(class = "table-scroll", tableOutput("mice_groups"))),
+          width = 9
+        )
       )
-    )
   )
 )
 
@@ -393,7 +415,7 @@ server <- function(input, output, session) {
     data
   })
 
-  exploration_server("eda", clean_data, raw_data)
+  exploration_server("eda", clean_data, raw_data, imputed_data)
   cleaning_method <- reactive({
     req(input$numeric_method)
     method <- names(numeric_methods)[match(input$numeric_method, numeric_methods)]
@@ -538,6 +560,27 @@ server <- function(input, output, session) {
                          check.names = FALSE)
     report[order(-before), ]
   })
+
+  imputation_test <- eventReactive(input$compare_imputation, {
+    data <- clean_data()[imputation_columns()]
+    validate(need(nrow(data) >= 2L, "Le test nécessite au moins deux lignes."))
+    is_mice <- identical(input$source, "mice")
+    scores <- withProgress(message = "Comparaison des méthodes", {
+      compare_imputation(data, if (is_mice) mouse_id, if (is_mice) mouse_classes)
+    })
+    list(data = data, source = input$source, scores = scores)
+  })
+
+  output$imputation_test_scores <- renderTable({
+    test <- imputation_test()
+    validate(
+      need(identical(test$source, input$source) &&
+             identical(test$data, clean_data()[imputation_columns()]),
+           "Relance la comparaison pour appliquer la nouvelle sélection."),
+      need(!is.null(test$scores), "Il faut des valeurs connues dans les colonnes à traiter pour lancer ce test.")
+    )
+    test$scores
+  }, na = "—")
 
   output$comparison <- renderPlot({
     before <- clean_data()

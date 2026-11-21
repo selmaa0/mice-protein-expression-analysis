@@ -2,6 +2,8 @@ exploration_ui <- function(id) {
   ns <- NS(id)
   sidebarLayout(
     sidebarPanel(
+      selectInput(ns("data_version"), "Données à explorer",
+                  c("Avant imputation" = "observed", "Après imputation" = "imputed")),
       radioButtons(ns("mode"), "Que veux-tu examiner ?",
                    c("Une colonne" = "one", "Deux colonnes" = "two")),
       selectizeInput(ns("first"), "Colonne à examiner", NULL),
@@ -25,7 +27,7 @@ exploration_ui <- function(id) {
   )
 }
 
-exploration_server <- function(id, dataset, raw_dataset) {
+exploration_server <- function(id, observed, raw_dataset, imputed) {
   moduleServer(id, function(input, output, session) {
     observeEvent(raw_dataset(), {
       columns <- names(raw_dataset())
@@ -33,6 +35,10 @@ exploration_server <- function(id, dataset, raw_dataset) {
       second <- if ("ITSN1_N" %in% columns) "ITSN1_N" else head(setdiff(columns, first), 1)
       updateSelectizeInput(session, "first", choices = columns, selected = first, server = TRUE)
       updateSelectizeInput(session, "second", choices = columns, selected = second, server = TRUE)
+    })
+
+    dataset <- reactive({
+      if (identical(input$data_version, "imputed")) imputed() else observed()
     })
 
     selection <- reactive({
@@ -54,7 +60,7 @@ exploration_server <- function(id, dataset, raw_dataset) {
     })
 
     output$first_is_numeric <- reactive({
-      data <- dataset()
+      data <- observed()
       isTRUE(input$first %in% names(data)) && is.numeric(data[[input$first]])
     })
     outputOptions(output, "first_is_numeric", suspendWhenHidden = FALSE)
@@ -94,7 +100,7 @@ exploration_server <- function(id, dataset, raw_dataset) {
         return(div(class = "dataset-context",
                    h2(name),
                    p(explanation),
-                   p(class = "diagnostic-help", sprintf("%d valeurs observées · %d manquantes", n, omitted))))
+                   p(class = "diagnostic-help", sprintf("%d valeurs disponibles · %d manquantes", n, omitted))))
       }
 
       explanation <- pair_interpretation(data)
