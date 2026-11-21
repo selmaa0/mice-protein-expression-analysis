@@ -7,7 +7,7 @@ source("preparation.R", local = TRUE, encoding = "UTF-8")
 
 missing_tokens <- c("", "NA", "N/A", "?")
 numeric_methods <- c("Médiane" = "median", "Moyenne" = "mean",
-                     "Estimation par voisins (KNN)" = "knn", "Laisser vide" = "keep")
+                     "Estimation par voisins (KNN)" = "knn", "Garder les cellules vides" = "keep")
 
 normalize_missing <- function(column) {
   if (is.character(column)) {
@@ -190,7 +190,7 @@ ui <- navbarPage(
         conditionalPanel(
           "output.has_categorical_gaps",
           selectInput("categorical_method", "Pour les catégories",
-                      c("Catégorie la plus fréquente" = "mode", "Laisser vide" = "keep"),
+                      c("Catégorie la plus fréquente" = "mode", "Garder les cellules vides" = "keep"),
                       selected = "keep")
         ),
         conditionalPanel(
@@ -202,7 +202,7 @@ ui <- navbarPage(
           tags$summary("Protéger des colonnes"),
           div(
             selectizeInput("protected", "Colonnes à laisser telles quelles", NULL, multiple = TRUE),
-            helpText("Par exemple, un identifiant. Ces colonnes restent dans le CSV. Leurs cellules vides ne sont pas remplies et KNN ne les utilise pas.")
+            helpText("Les colonnes protégées restent dans le CSV avec leurs cellules vides, quelle que soit la méthode choisie.")
           )
         ),
         width = 3

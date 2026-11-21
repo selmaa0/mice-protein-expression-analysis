@@ -49,6 +49,7 @@ preparation_server <- function(id, imputed, eligible, cleaning_method) {
       too_many <- available()$too_many
       tagList(
         div(class = "metric-grid",
+            metric("Cellules vides après nettoyage", sum(is.na(imputed()))),
             metric("Colonnes standardisées", length(transforms$scales)),
             if (can_encode()) metric("Colonnes encodées", length(transforms$categories)),
             if (can_encode()) metric("Indicateurs créés", sum(lengths(transforms$categories)))),
