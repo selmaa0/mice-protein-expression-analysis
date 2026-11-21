@@ -1,0 +1,163 @@
+:root {
+  --ink: #20292c;
+  --muted: #516066;
+  --accent: #285c63;
+  --line: #dce3e4;
+  --tint: #f3f6f6;
+}
+
+body {
+  color: var(--ink);
+  background: #fff;
+  font: 15px/1.5 "Segoe UI", system-ui, sans-serif;
+}
+
+body > .container-fluid {
+  max-width: 1360px;
+  padding: 0 clamp(16px, 4vw, 48px) 40px;
+}
+
+.navbar.navbar-default {
+  background: #fff;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  margin-bottom: 0;
+}
+
+.navbar > .container-fluid { padding-inline: 0; }
+.navbar .navbar-header .navbar-brand {
+  color: var(--ink);
+  font-weight: 650;
+  font-size: 17px;
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.navbar-default .navbar-nav > li > a {
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+}
+
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: var(--accent);
+  background: var(--tint);
+}
+
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: var(--accent);
+  background: var(--tint);
+  border-bottom-color: var(--accent);
+}
+
+.page-heading {
+  margin: 26px 0 22px;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 650;
+}
+
+.well {
+  padding: 16px;
+  background: var(--tint);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  box-shadow: none;
+}
+
+.result-section { margin: 0 0 26px; }
+.result-section h2, .well h2 {
+  margin: 0 0 12px;
+  font-weight: 650;
+  font-size: 17px;
+}
+
+.result-section h2 {
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 125px), 1fr));
+  margin-bottom: 22px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.metric-grid:empty { display: none; }
+.metric { padding: 9px 12px; }
+.metric span { display: block; color: var(--muted); font-size: 13px; }
+.metric strong {
+  display: block;
+  font-size: 23px;
+  line-height: 1.2;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.well label { font-size: 14px; }
+.well .help-block { color: var(--muted); font-size: 13px; }
+.well a:not(.btn) { color: var(--accent); text-decoration: underline; }
+.well .form-control, .well .selectize-input { border-color: #aebcbf; border-radius: 3px; }
+.imputation-export .shiny-download-link {
+  background: var(--accent);
+  border-color: var(--accent);
+  border-radius: 3px;
+  color: #fff;
+  font-weight: 600;
+  max-width: 100%;
+  white-space: normal;
+}
+
+.imputation-export .shiny-download-link:hover { background: #204b51; }
+.imputation-export .shiny-download-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.imputation-export { margin-top: 18px; }
+.imputation-options { border-top: 1px solid var(--line); padding-top: 10px; }
+.imputation-options summary { color: var(--accent); cursor: pointer; font-size: 14px; }
+.imputation-options[open] > div { margin-top: 12px; }
+
+.analysis-note {
+  margin-bottom: 18px;
+  padding: 0 0 0 12px;
+  border-left: 2px solid #9bafb2;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.table-scroll { max-height: 430px; overflow: auto; }
+.table-scroll .table { width: 100%; margin-bottom: 0; font-size: 14px; }
+.table-scroll th { position: sticky; top: 0; background: var(--tint); white-space: nowrap; }
+.table-scroll .table > thead > tr > th,
+.table-scroll .table > tbody > tr > td { padding: 7px 10px; border-color: var(--line); }
+.table-scroll tbody tr:nth-child(even) { background: #f9fafa; }
+
+.dataset-context { margin-bottom: 18px; }
+.dataset-context h2 {
+  margin: 0 0 8px;
+  font-size: 19px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.dataset-context p { max-width: 78ch; margin: 0 0 6px; }
+.dataset-context a { color: var(--accent); text-decoration: underline; }
+.dataset-context .user-description { white-space: pre-wrap; overflow-wrap: anywhere; }
+.diagnostic-view { padding-top: 14px; }
+.diagnostic-help { max-width: 78ch; color: var(--muted); font-size: 14px; }
+.diagnostic-detail { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.diagnostic-detail summary { cursor: pointer; color: var(--accent); margin-bottom: 10px; }
+.current-dataset { margin-bottom: 12px; font-size: 17px; font-weight: 650; overflow-wrap: anywhere; }
+.imputation-export p { margin-top: 10px; }
+.preparation-preview td { white-space: nowrap; }
+.study-overview { max-width: 85ch; margin-bottom: 20px; }
+.study-overview a { color: var(--accent); text-decoration: underline; }
+#mouse_explanation { margin-bottom: 14px; font-weight: 600; }
+
+@media (max-width: 767px) {
+  .navbar .navbar-header { margin-inline: 0; }
+  .navbar .navbar-toggle { margin-right: 0; }
+  .navbar .navbar-nav { margin-inline: 0; }
+  .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
